@@ -1,10 +1,9 @@
-<!-- Nice-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poker Pot Calculator</title>
+<title>Group Pot Calculator</title>
 <style>
 body {
     background: radial-gradient(circle at top, #3b2f1a, #0f0c08);
@@ -107,14 +106,14 @@ h1 {
     position: relative;
 }
 
-.player.folded {
+.player.skipped {
     opacity: 0.6;
     border-color: #a52a2a;
     background: linear-gradient(145deg, #2a1d0a, #1a1005);
 }
 
-.player.folded::after {
-    content: "FOLDED";
+.player.skipped::after {
+    content: "SKIPPED";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -144,7 +143,7 @@ h1 {
     font-weight: bold;
 }
 
-.player.folded input[type="text"] {
+.player.skipped input[type="text"] {
     color: #a52a2a;
 }
 
@@ -153,7 +152,7 @@ h1 {
     font-size: 18px;
 }
 
-.ante {
+.entry-fee {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -164,7 +163,7 @@ h1 {
     background: linear-gradient(145deg, #4a3a18, #2b220f);
 }
 
-.ante input {
+.entry-fee input {
     width: 80px;
     padding: 5px;
     background: #1a1408;
@@ -226,12 +225,12 @@ button:active {
     transform: translateY(0);
 }
 
-.fold-btn {
+.skip-btn {
     background: linear-gradient(145deg, #a52a2a, #8b0000);
     color: #fff;
 }
 
-.fold-btn:hover {
+.skip-btn:hover {
     background: linear-gradient(145deg, #c33c3c, #a52a2a);
 }
 
@@ -274,7 +273,7 @@ button:active {
     color: white;
 }
 
-.status-indicator.folded {
+.status-indicator.skipped {
     background: #a52a2a;
 }
 
@@ -306,7 +305,7 @@ button:active {
 <body>
 
 <div class="table">
-<h1>♠ Poker Pot Calculator ♠</h1>
+<h1>♠ Group Pot Calculator ♠</h1>
 
 <!-- Player Setup Section -->
 <div class="setup-container" id="setupContainer">
@@ -323,11 +322,11 @@ button:active {
 
 <!-- Game Section (Initially Hidden) -->
 <div id="gameContainer" class="hidden">
-    <div class="ante">
-        <span>Ante (Token Amount)</span>
+    <div class="entry-fee">
+        <span>Entry Fee (Token Amount)</span>
         <div>
-            <input type="number" id="anteAmount" value="10" min="0">
-            <button onclick="allAnte()">All Ante</button>
+            <input type="number" id="entryFeeAmount" value="10" min="0">
+            <button onclick="allEntryFee()">All Pay Entry Fee</button>
         </div>
     </div>
 
@@ -339,22 +338,22 @@ button:active {
     <!-- Betting Controls -->
     <div class="controls-row">
         <div class="bet-controls">
-            <span>Bet Amount:</span>
-            <input type="number" id="commonBet" placeholder="Bet" min="0" value="20">
-            <button onclick="placeBetForAll()">Bet for All Active Players</button>
+            <span>Contribution Amount:</span>
+            <input type="number" id="commonBet" placeholder="Amount" min="0" value="20">
+            <button onclick="placeBetForAll()">Add for All Active Players</button>
         </div>
         <div class="action-buttons">
-            <button onclick="resetBets()">Reset Bets</button>
+            <button onclick="resetBets()">Reset Contributions</button>
             <button class="reset-btn" onclick="resetGame()">New Game</button>
         </div>
     </div>
 
     <div class="pot">
-        Pot: $<span id="pot">0</span>
+        Total Pool: $<span id="pot">0</span>
     </div>
     
     <div class="instructions">
-        Click on a player's FOLD button to mark them as folded for the current round. Use "Bet for All Active Players" to place the same bet for all non-folded players.
+        Click on a player's SKIP button to mark them as skipped for the current round. Use "Add for All Active Players" to add the same amount for all non-skipped players.
     </div>
 </div>
 </div>
@@ -372,7 +371,7 @@ class Player {
         this.id = id;
         this.name = name;
         this.balance = balance;
-        this.folded = false;
+        this.skipped = false;
         this.currentBet = 0;
     }
 }
@@ -423,7 +422,7 @@ function updatePlayersDisplay() {
     
     players.forEach(player => {
         const playerElement = document.createElement('div');
-        playerElement.className = `player ${player.folded ? 'folded' : ''}`;
+        playerElement.className = `player ${player.skipped ? 'skipped' : ''}`;
         playerElement.id = `player-${player.id}`;
         
         playerElement.innerHTML = `
@@ -433,15 +432,15 @@ function updatePlayersDisplay() {
             </div>
             <div class="player-actions">
                 <div>
-                    <span class="status-indicator ${player.folded ? 'folded' : ''}">
-                        ${player.folded ? 'FOLDED' : 'ACTIVE'}
+                    <span class="status-indicator ${player.skipped ? 'skipped' : ''}">
+                        ${player.skipped ? 'SKIPPED' : 'ACTIVE'}
                     </span>
                 </div>
                 <div>
-                    <button class="fold-btn" onclick="toggleFold(${player.id})">
-                        ${player.folded ? 'UNFOLD' : 'FOLD'}
+                    <button class="skip-btn" onclick="toggleSkip(${player.id})">
+                        ${player.skipped ? 'UNSKIP' : 'SKIP'}
                     </button>
-                    <button onclick="winPot(${player.id})">WIN</button>
+                    <button onclick="winPot(${player.id})">CLAIM POOL</button>
                 </div>
             </div>
         `;
@@ -458,11 +457,11 @@ function updatePlayerName(id, name) {
     }
 }
 
-// Toggle fold status
-function toggleFold(playerId) {
+// Toggle skip status
+function toggleSkip(playerId) {
     const player = players.find(p => p.id === playerId);
     if (player) {
-        player.folded = !player.folded;
+        player.skipped = !player.skipped;
         updatePlayersDisplay();
     }
 }
@@ -470,7 +469,7 @@ function toggleFold(playerId) {
 // Place bet for a specific player
 function bet(playerId) {
     const player = players.find(p => p.id === playerId);
-    if (!player || player.folded) return;
+    if (!player || player.skipped) return;
     
     const amount = parseInt(document.getElementById(`bet${playerId}`).value);
     
@@ -489,14 +488,14 @@ function placeBetForAll() {
     const amount = parseInt(document.getElementById('commonBet').value);
     
     if (!amount || amount <= 0) {
-        alert("Please enter a valid bet amount");
+        alert("Please enter a valid amount");
         return;
     }
     
     let anyBetPlaced = false;
     
     players.forEach(player => {
-        if (!player.folded && player.balance >= amount) {
+        if (!player.skipped && player.balance >= amount) {
             player.balance -= amount;
             pot += amount;
             player.currentBet = amount;
@@ -505,20 +504,20 @@ function placeBetForAll() {
     });
     
     if (!anyBetPlaced) {
-        alert("No active players could place the bet (insufficient funds or all folded)");
+        alert("No active players could contribute (insufficient funds or all skipped)");
     }
     
     updateUI();
 }
 
-// All ante function
-function allAnte() {
-    const ante = parseInt(document.getElementById('anteAmount').value) || 0;
+// All entry fee function
+function allEntryFee() {
+    const entryFee = parseInt(document.getElementById('entryFeeAmount').value) || 0;
     
     players.forEach(player => {
-        if (!player.folded && player.balance >= ante) {
-            player.balance -= ante;
-            pot += ante;
+        if (!player.skipped && player.balance >= entryFee) {
+            player.balance -= entryFee;
+            pot += entryFee;
         }
     });
     
@@ -532,9 +531,9 @@ function winPot(playerId) {
         player.balance += pot;
         pot = 0;
         
-        // Reset all players' folded status for next round
+        // Reset all players' skipped status for next round
         players.forEach(p => {
-            p.folded = false;
+            p.skipped = false;
             p.currentBet = 0;
         });
         
@@ -545,8 +544,8 @@ function winPot(playerId) {
 
 // Reset bets for all players
 function resetBets() {
-    // This would return bets to players, but in real poker bets can't be taken back
-    // So this just clears the current bet tracking
+    // This would return bets to players, but in real games contributions can't be taken back
+    // So this just clears the current contribution tracking
     players.forEach(player => {
         player.currentBet = 0;
     });
