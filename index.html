@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Pot Calculator</title>
+<style>
+body {
+    background: radial-gradient(circle at top, #3b2f1a, #0f0c08);
+    font-family: "Trebuchet MS", sans-serif;
+    color: #f5d77a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+.table {
+    background: linear-gradient(145deg, #2b220f, #1a1408);
+    border: 3px solid #c9a24d;
+    border-radius: 20px;
+    padding: 25px;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 0 30px rgba(255, 215, 100, 0.4);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #ffd966;
+    text-shadow: 0 0 8px rgba(255, 215, 100, 0.6);
+}
+
+.setup-container {
+    background: linear-gradient(145deg, #3a2d14, #241b0c);
+    border: 1px solid #c9a24d;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.setup-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #ffd966;
+}
+
+.player-setup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.player-setup button {
+    background: linear-gradient(145deg, #4a3a18, #2b220f);
+    border: 1px solid #c9a24d;
+    border-radius: 8px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #ffd966;
+    transition: all 0.2s;
+}
+
+.player-setup button:hover {
+    background: linear-gradient(145deg, #5a4a28, #3a2d14);
+}
+
+.player-setup button.active {
+    background: linear-gradient(145deg, #ffd966, #c9a24d);
+    color: #3b2f1a;
+    box-shadow: 0 0 10px rgba(255, 215, 100, 0.6);
+}
+
+.start-btn {
+    display: block;
+    margin: 0 auto;
+    background: linear-gradient(145deg, #5d8c3e, #3d5c2e);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff;
+    font-size: 16px;
+}
+
+.start-btn:hover {
+    background: linear-gradient(145deg, #6da34a, #4d7343);
+}
+
+.player {
+    background: linear-gradient(145deg, #3a2d14, #241b0c);
+    border: 1px solid #c9a24d;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.player.folded {
+    opacity: 0.6;
+    border-color: #a52a2a;
+    background: linear-gradient(145deg, #2a1d0a, #1a1005);
+}
+
+.player.folded::after {
+    content: "FOLDED";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-size: 30px;
+    font-weight: bold;
+    color: #a52a2a;
+    opacity: 0.7;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+.player-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.player input[type="text"] {
+    background: #1a1408;
+    border: 1px solid #c9a24d;
+    border-radius: 6px;
+    color: #ffd966;
+    padding: 4px 6px;
+    width: 140px;
+    font-weight: bold;
+}
+
+.player.folded input[type="text"] {
+    color: #a52a2a;
+}
+
+.balance {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.ante {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    border: 2px solid #c9a24d;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #4a3a18, #2b220f);
+}
+
+.ante input {
+    width: 80px;
+    padding: 5px;
+    background: #1a1408;
+    border: 1px solid #c9a24d;
+    color: #ffd966;
+    border-radius: 6px;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding: 10px;
+    border: 2px solid #c9a24d;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #4a3a18, #2b220f);
+}
+
+.bet-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bet-controls input {
+    width: 100px;
+    padding: 8px;
+    background: #1a1408;
+    border: 1px solid #c9a24d;
+    border-radius: 6px;
+    color: #ffd966;
+    font-size: 16px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    background: linear-gradient(145deg, #ffd966, #c9a24d);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #3b2f1a;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: linear-gradient(145deg, #ffeb99, #d4af37);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.fold-btn {
+    background: linear-gradient(145deg, #a52a2a, #8b0000);
+    color: #fff;
+}
+
+.fold-btn:hover {
+    background: linear-gradient(145deg, #c33c3c, #a52a2a);
+}
+
+.reset-btn {
+    background: linear-gradient(145deg, #5d8c3e, #3d5c2e);
+    color: #fff;
+}
+
+.reset-btn:hover {
+    background: linear-gradient(145deg, #6da34a, #4d7343);
+}
+
+.pot {
+    margin-top: 15px;
+    padding: 15px;
+    text-align: center;
+    font-size: 24px;
+    background: linear-gradient(145deg, #4a3a18, #2b220f);
+    border: 2px solid #ffd966;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.player-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.status-indicator {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #3d5c2e;
+    color: white;
+}
+
+.status-indicator.folded {
+    background: #a52a2a;
+}
+
+.instructions {
+    font-size: 12px;
+    color: #c9a24d;
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .table {
+        padding: 15px;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .bet-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="table">
+<h1>♠ Poker Pot Calculator ♠</h1>
+
+<!-- Player Setup Section -->
+<div class="setup-container" id="setupContainer">
+    <div class="setup-title">Select Number of Players</div>
+    <div class="player-setup">
+        <button onclick="selectPlayers(2)" class="active">2 Players</button>
+        <button onclick="selectPlayers(3)">3 Players</button>
+        <button onclick="selectPlayers(4)">4 Players</button>
+        <button onclick="selectPlayers(5)">5 Players</button>
+        <button onclick="selectPlayers(6)">6 Players</button>
+    </div>
+    <button class="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<!-- Game Section (Initially Hidden) -->
+<div id="gameContainer" class="hidden">
+    <div class="ante">
+        <span>Ante (Token Amount)</span>
+        <div>
+            <input type="number" id="anteAmount" value="10" min="0">
+            <button onclick="allAnte()">All Ante</button>
+        </div>
+    </div>
+
+    <!-- Player Containers -->
+    <div id="playersContainer">
+        <!-- Players will be dynamically added here -->
+    </div>
+
+    <!-- Betting Controls -->
+    <div class="controls-row">
+        <div class="bet-controls">
+            <span>Bet Amount:</span>
+            <input type="number" id="commonBet" placeholder="Bet" min="0" value="20">
+            <button onclick="placeBetForAll()">Bet for All Active Players</button>
+        </div>
+        <div class="action-buttons">
+            <button onclick="resetBets()">Reset Bets</button>
+            <button class="reset-btn" onclick="resetGame()">New Game</button>
+        </div>
+    </div>
+
+    <div class="pot">
+        Pot: $<span id="pot">0</span>
+    </div>
+    
+    <div class="instructions">
+        Click on a player's FOLD button to mark them as folded for the current round. Use "Bet for All Active Players" to place the same bet for all non-folded players.
+    </div>
+</div>
+</div>
+
+<script>
+// Game state
+let pot = 0;
+let playerCount = 2;
+let gameStarted = false;
+let players = [];
+
+// Player class to manage player state
+class Player {
+    constructor(id, name, balance) {
+        this.id = id;
+        this.name = name;
+        this.balance = balance;
+        this.folded = false;
+        this.currentBet = 0;
+    }
+}
+
+// Initialize the game
+function initGame() {
+    // Create players array based on selected count
+    players = [];
+    for (let i = 1; i <= playerCount; i++) {
+        players.push(new Player(i, `Player ${i}`, 500));
+    }
+    
+    // Reset pot
+    pot = 0;
+    
+    // Update UI
+    updatePlayersDisplay();
+    updateUI();
+}
+
+// Select number of players
+function selectPlayers(count) {
+    playerCount = count;
+    
+    // Update button styles
+    document.querySelectorAll('.player-setup button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Find and activate the clicked button
+    const buttons = document.querySelectorAll('.player-setup button');
+    buttons[count - 2].classList.add('active'); // -2 because we start from 2 players
+}
+
+// Start the game
+function startGame() {
+    gameStarted = true;
+    document.getElementById('setupContainer').classList.add('hidden');
+    document.getElementById('gameContainer').classList.remove('hidden');
+    
+    initGame();
+}
+
+// Update players display
+function updatePlayersDisplay() {
+    const container = document.getElementById('playersContainer');
+    container.innerHTML = '';
+    
+    players.forEach(player => {
+        const playerElement = document.createElement('div');
+        playerElement.className = `player ${player.folded ? 'folded' : ''}`;
+        playerElement.id = `player-${player.id}`;
+        
+        playerElement.innerHTML = `
+            <div class="player-top">
+                <input type="text" value="${player.name}" onchange="updatePlayerName(${player.id}, this.value)">
+                <span class="balance">$<span id="b${player.id}">${player.balance}</span></span>
+            </div>
+            <div class="player-actions">
+                <div>
+                    <span class="status-indicator ${player.folded ? 'folded' : ''}">
+                        ${player.folded ? 'FOLDED' : 'ACTIVE'}
+                    </span>
+                </div>
+                <div>
+                    <button class="fold-btn" onclick="toggleFold(${player.id})">
+                        ${player.folded ? 'UNFOLD' : 'FOLD'}
+                    </button>
+                    <button onclick="winPot(${player.id})">WIN</button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(playerElement);
+    });
+}
+
+// Update player name
+function updatePlayerName(id, name) {
+    const player = players.find(p => p.id === id);
+    if (player) {
+        player.name = name;
+    }
+}
+
+// Toggle fold status
+function toggleFold(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+        player.folded = !player.folded;
+        updatePlayersDisplay();
+    }
+}
+
+// Place bet for a specific player
+function bet(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (!player || player.folded) return;
+    
+    const amount = parseInt(document.getElementById(`bet${playerId}`).value);
+    
+    if (!amount || amount <= 0) return;
+    
+    if (player.balance >= amount) {
+        player.balance -= amount;
+        pot += amount;
+        player.currentBet = amount;
+        updateUI();
+    }
+}
+
+// Place bet for all active players
+function placeBetForAll() {
+    const amount = parseInt(document.getElementById('commonBet').value);
+    
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid bet amount");
+        return;
+    }
+    
+    let anyBetPlaced = false;
+    
+    players.forEach(player => {
+        if (!player.folded && player.balance >= amount) {
+            player.balance -= amount;
+            pot += amount;
+            player.currentBet = amount;
+            anyBetPlaced = true;
+        }
+    });
+    
+    if (!anyBetPlaced) {
+        alert("No active players could place the bet (insufficient funds or all folded)");
+    }
+    
+    updateUI();
+}
+
+// All ante function
+function allAnte() {
+    const ante = parseInt(document.getElementById('anteAmount').value) || 0;
+    
+    players.forEach(player => {
+        if (!player.folded && player.balance >= ante) {
+            player.balance -= ante;
+            pot += ante;
+        }
+    });
+    
+    updateUI();
+}
+
+// Win pot function
+function winPot(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+        player.balance += pot;
+        pot = 0;
+        
+        // Reset all players' folded status for next round
+        players.forEach(p => {
+            p.folded = false;
+            p.currentBet = 0;
+        });
+        
+        updateUI();
+        updatePlayersDisplay();
+    }
+}
+
+// Reset bets for all players
+function resetBets() {
+    // This would return bets to players, but in real poker bets can't be taken back
+    // So this just clears the current bet tracking
+    players.forEach(player => {
+        player.currentBet = 0;
+    });
+    
+    // Update UI if needed
+    updatePlayersDisplay();
+}
+
+// Reset the entire game
+function resetGame() {
+    gameStarted = false;
+    document.getElementById('setupContainer').classList.remove('hidden');
+    document.getElementById('gameContainer').classList.add('hidden');
+    
+    // Reset all game state
+    pot = 0;
+    players = [];
+    updateUI();
+}
+
+// Update the UI
+function updateUI() {
+    document.getElementById("pot").innerText = pot;
+    
+    // Update balances in player displays
+    players.forEach(player => {
+        const balanceElement = document.getElementById(`b${player.id}`);
+        if (balanceElement) {
+            balanceElement.innerText = player.balance;
+        }
+    });
+}
+</script>
+</body>
+</html>
